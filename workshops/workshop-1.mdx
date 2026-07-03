@@ -1,7 +1,7 @@
 ---
-title: "Workshop 1: Recursive Algorithms in Python"
+title: "Workshop 1: Recursive Algorithms in Python — ED UCALDAS"
 sidebarTitle: "Workshop 1"
-description: "Complete Workshop 1 covering recursive binary search, stack and tail factorial, list summation, and Fibonacci algorithms with LIFO and FIFO recursion patterns."
+description: "Workshop 1: four recursive Python algorithms — binary search (LIFO), factorial (LIFO/FIFO), list sum (FIFO), and Fibonacci with memoization. ED UCALDAS."
 ---
 
 Workshop 1 explores four classic recursive problems implemented in Python. Each exercise introduces a distinct recursion pattern — either **LIFO (stack/last-in-first-out)** or **FIFO (tail/first-in-first-out)** — building a practical foundation for reasoning about call-stack depth, accumulated state, and memoization. All exercises were authored by Santiago Rivera Marín (4th Semester, Data Structures, UCALDAS) and run in Google Colab.
@@ -30,34 +30,37 @@ from typing import Union
 def binary_search(lista: list, value: int, left: int, right: int):
     medio = (left + right) // 2
 
-    # Base cases
+    # Base Case
+
     if medio > (len(lista) - 1) or right < left:
-        # Value not found in list
+        # Value not exists in list
         return -1
     elif lista[medio] == value:
         # Found value
         return medio
 
     if value > lista[medio]:
-        # Recurse on the right side
+        # Carry out the recursion to right side
         left = medio + 1
     else:
-        # Recurse on the left side
+        # Carry out the recursion to left side
         right = medio - 1
 
     return binary_search(lista, value, left, right)
 
-# Usage
+# "Tests"
 list_integer: list[int] = [4, 2, 1, 6, 7, 3, 8, 12, 5, 9, 13]
 list_integer.sort()
 print(f"{list_integer=}")
 # list_integer=[1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 13]
 
-int_to_find: int = 7
+int_to_find: int = 127
+
 left, right = 0, len(list_integer)
 index: Union[int, None] = binary_search(list_integer, int_to_find, left, right)
+
 print(f"{index=}")
-# index=6
+# index=-1
 ```
 
 <Tip>
@@ -75,17 +78,26 @@ Two versions of factorial are implemented to contrast the two main recursion sty
 The LIFO version mirrors classical mathematical recursion. Each call to `factorial_pila` suspends until the deeper call returns, building the product on the way **back up** the call stack.
 
 ```python title="factorial_lifo.py"
+# If n == 5
+# Factorial(n) = 5x4x3x2x1 = 120
+# Base Case: n == 2 (Any value by 1 is the same value)
+
 def factorial_pila(n: int):
     if n < 0:
-        return -1      # Invalid input
+        # Not missing the joker...
+        return -1
     elif n == 0:
-        return 0       # Edge case: 0! defined as 0 here
+        return 0
     elif n in [2, 1]:
-        return n       # Base case
+        return n
+
     return n * factorial_pila(n - 1)
 
-print(factorial_pila(5))   # 120
-print(factorial_pila(10))  # 3628800
+# Tests
+n: int = -10
+
+fact_pila: int = factorial_pila(n)
+print(f"The factorial of {n} (Using LIFO), is: {fact_pila}")
 ```
 
 ### FIFO Version (Tail / Accumulator Recursion)
@@ -93,19 +105,29 @@ print(factorial_pila(10))  # 3628800
 The FIFO version uses a **mutable list as an accumulator** (`array[0]`). The multiplication happens **before** the recursive call — the function passes accumulated state forward rather than waiting to multiply on the way back. This is the tail-recursive pattern.
 
 ```python title="factorial_fifo.py"
+# If n == 5
+# Factorial(n) = 5x4x3x2x1 = 120
+# Base Case: n == 2 (Any value by 1 is the same value)
+
 def factorial_cola(n: int, array: list[int]):
     if n < 0:
-        array[0] = -1   # Invalid input
+        # Not missing the joker...
+        array[0] = -1
     elif n == 0:
-        array[0] = 0    # Edge case
+        array[0] = 0
     elif n > 1:
+        # Only if array[0] from begin is 1
+        # To can get the product (array[0] * n)...
         array[0] *= n   # Accumulate before recursing
         factorial_cola(n - 1, array)
 
-fact_cola = [1]
-factorial_cola(10, fact_cola)
-print(f"Factorial of 10: {fact_cola[0]}")
-# Factorial of 10: 3628800
+# Tests
+n: int = 10
+
+fact_cola: list[int] = [1]
+
+factorial_cola(n, fact_cola)
+print(f"The factorial of {n} (Using FIFO), is: {fact_cola[0]}")
 ```
 
 <Note>
@@ -119,15 +141,23 @@ print(f"Factorial of 10: {fact_cola[0]}")
 Compute the sum of all elements in a list using **FIFO (tail) recursion**. The running total is stored in the single-element list `sum`, which is updated before each recursive call — no return value is needed.
 
 ```python title="list_sum.py"
+# Base Case: When n reaches len(list)
+
 def list_sum(index: int, array: list[int], sum: list[int]) -> None:
     if index >= 0 and index < len(array):
-        sum[0] += array[index]      # Accumulate current element
-        list_sum(index + 1, array, sum)  # Advance to the next index
+        sum[0] += array[index]
+        list_sum(index + 1, array, sum)
 
-sum = [0]
-list_sum(0, [0, 1, 2, 3, 4], sum)
-print(f"Sum: {sum[0]}")
-# Sum: 10
+# Tests
+
+sum: list[int] = [0]
+
+num_array: list[int] = [0, 1, 2, 3, 4]
+i: int = 0
+
+list_sum(i, num_array, sum)
+
+print(f"The addition of all elements is (FIFO): {sum[0]}")
 ```
 
 **Trace for `[0, 1, 2, 3, 4]`:**
@@ -153,52 +183,70 @@ State is carried forward through the `left` and `right` parameters; the result i
 
 ```python title="fibonacci_tail.py"
 def fibonacci(n: int, suma: list[int] = [0], left: int = 0, right: int = 1):
+    # To avoid use the Return
     if not n in [0, 1]:
         suma[0] = left + right
+
+        print(f'{left=} ------ {right=} ------- {suma=}')
+
+        # Like bubble sort
         left, right = right, suma[0]
         fibonacci(n - 1, suma, left, right)
 
-# Usage
-acc = [0]
-fibonacci(10, acc)
-print(f"Fibonacci(10) = {acc[0]}")
-# Fibonacci(10) = 55
+# "Tests"
+# left, right = 0, 1
+
+suma = [0]
+n: int = 15
+
+fibonacci(n, suma)
+
+print(f"The Fibonacci Serie for {n} is: {suma[0]}")
 ```
 
 <Warning>
-  Default mutable arguments (`suma: list[int] = [0]`) are shared across calls in Python. Always pass an explicit accumulator when calling `fibonacci` multiple times in the same session, e.g. `fibonacci(10, [0])`.
+  Default mutable arguments (`suma: list[int] = [0]`) are shared across calls in Python. Always pass an explicit accumulator when calling `fibonacci` multiple times in the same session, e.g. `fibonacci(15, [0])`.
 </Warning>
 
 ### Memoized Version
 
-The memoized version uses a dictionary (`values`) to cache already-computed Fibonacci numbers. Before recursing, the function checks whether `fib(n-1)` or `fib(n-2)` is already known, avoiding redundant subtree evaluations.
+The memoized version uses a dictionary (`values`) to cache already-computed Fibonacci numbers. Before recursing, the function checks whether the value is already known, avoiding redundant subtree evaluations.
 
 ```python title="fibonacci_memoized.py"
 def fibonacci_2(n: int, values: dict):
+    # Base Case
     if n in [0, 1]:
         return n
 
     left, right = n - 1, n - 2
 
-    # Resolve left term (fib(n-1))
+    # Case n-1 values already!
     if values.get(left):
         left = values[left]
     else:
-        left = fibonacci_2(n - 1, values)
-        values[n - 1] = left
+        values[left] = fibonacci_2(left, values)
+        left = values[left]
 
-    # Resolve right term (fib(n-2))
+    # Case n-2 values already!
     if values.get(right):
-        right = values[right]
+        left = values[right]
     else:
-        right = fibonacci_2(n - 2, values)
-        values[n - 2] = right
+        values[right] = fibonacci_2(right, values)
+        right = values[right]
 
-    return left + right
+    # Missing the n: x
+    return values[n - 1] + values[n - 2]
 
-cache = {}
-print(fibonacci_2(10, cache))   # 55
-print(fibonacci_2(15, cache))   # 610  (reuses cached values)
+
+# Tests
+
+dict_values: dict = {0: 0, 1: 1}
+n: int = 15
+
+fibo: int = fibonacci_2(n, dict_values)
+
+print(dict_values)
+print(f"The Fibonacci Serie for {n} is: {fibo}")
 ```
 
 <Tip>

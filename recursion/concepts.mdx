@@ -1,5 +1,5 @@
 ---
-title: "Recursion in Python: Concepts and Patterns"
+title: "Recursion in Python: Concepts, Patterns, and Examples"
 sidebarTitle: "Concepts"
 description: "Learn how recursion works in Python, including base cases, call stacks, and recursive patterns used in binary search, factorial, and Fibonacci algorithms."
 ---
@@ -45,7 +45,7 @@ def binary_search(lista:list, value:int, left:int, right:int):
     left = medio + 1
   else:
     # Carry out the recursion to left side
-    right = medio - 1
+    right = medio -1
 
   return binary_search(lista, value, left, right)
 ```

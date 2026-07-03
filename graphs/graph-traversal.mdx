@@ -61,7 +61,7 @@ plt.figure(figsize=(8, 6))
 nx.draw(G_nx, pos, with_labels=True, node_color='skyblue', node_size=1500,
         font_size=12, font_weight='bold', arrows=True)
 nx.draw_networkx_edge_labels(G_nx, pos, edge_labels=edge_labels, font_color='red')
-plt.title("Graph Visualization with NetworkX", fontsize=14)
+plt.title("Visualización del Grafo con NetworkX", fontsize=14)
 plt.show()
 ```
 
@@ -82,7 +82,7 @@ Pass `seed=42` (or any fixed integer) to `nx.spring_layout` to get a **reproduci
 
 ## Advanced Graph Example
 
-The snippet below builds the more complex graph from `Graph.ipynb` — featuring eight vertices, thirteen directed edges, alternative paths, and return edges — and renders it with NetworkX in a single runnable block.
+The snippet below builds the more complex graph from `Graph.ipynb` — featuring ten vertices, nineteen directed edges, alternative paths, return edges, and a long low-cost shortcut — and renders it with NetworkX in a single runnable block.
 
 ```python
 import networkx as nx
@@ -150,6 +150,16 @@ g.add_edge('B', 'C', 1)   # Shortcut between B and C
 g.add_edge('E', 'B', 3)   # Return toward B
 g.add_edge('F', 'C', 4)   # Mid-return
 g.add_edge('G', 'H', 1)
+g.add_edge('H', 'I', 2)
+g.add_edge('I', 'J', 4)
+g.add_edge('H', 'F', 1)   # Feedback toward F
+g.add_edge('J', 'G', 2)   # Close cycle G-H-I-J-G
+
+# Long low-cost path
+g.add_edge('A', 'I', 15)
+
+# Alternative high-cost path
+g.add_edge('C', 'H', 12)
 
 # ── Convert to NetworkX and visualize ──────────────────────────────────────
 
@@ -166,8 +176,8 @@ plt.figure(figsize=(8, 6))
 nx.draw(G_nx, pos, with_labels=True, node_color='skyblue', node_size=1500,
         font_size=12, font_weight='bold', arrows=True)
 nx.draw_networkx_edge_labels(G_nx, pos, edge_labels=edge_labels, font_color='red')
-plt.title("Graph Visualization with NetworkX", fontsize=14)
+plt.title("Visualización del Grafo con NetworkX", fontsize=14)
 plt.show()
 ```
 
-This graph contains alternative paths (e.g., `A→B→D` vs. `A→C→D`) and return edges (`E→B`, `F→C`), making it a good test case for shortest-path algorithms such as Dijkstra or Bellman-Ford.
+This graph contains alternative paths (e.g., `A→B→D` vs. `A→C→D`), return edges (`E→B`, `F→C`), and a long low-cost shortcut (`A→I`), making it the exact test graph used in `Graph.ipynb` for the Bellman-Ford and Dijkstra shortest-path algorithms.

@@ -1,7 +1,7 @@
 ---
 title: "BST Traversals: Inorder, Pre-order, and Post-order"
 sidebarTitle: "Traversals"
-description: "Explore the three depth-first traversal orders for Binary Search Trees — inorder, pre-order, and post-order — with Python implementations and example output."
+description: "Explore the three depth-first BST traversal orders — inorder, pre-order, and post-order — with Python source implementations and example output."
 ---
 
 A **traversal** visits every node in a tree exactly once; the only thing that varies is the *order* in which a node is processed relative to its children. Binary trees admit three classic depth-first orderings — inorder, pre-order, and post-order — each of which has distinct algorithmic uses. Choosing the right traversal can mean the difference between producing a sorted sequence, serialising the tree structure, or computing a value that depends on all descendants before their ancestor. The UCALDAS BST implementation provides all three, plus a visual `print_tree` helper.
@@ -119,13 +119,13 @@ bst.print_tree(bst.root)
 ```
 
 ```text
-    ┌── 80
-┌── 70
-│   └── 60
+│       ┌── 80
+│   ┌── 70
+│   │   └── 60
 └── 50
-    ┌── 40
-└── 30
-    └── 20
+    │   ┌── 40
+    └── 30
+        └── 20
 ```
 
 **Reading the output:** rotate the diagram 90° counter-clockwise — the topmost line is the rightmost node and the bottommost line is the leftmost node. The `┌──` connector marks a right child; `└──` marks a left child. Vertical bars (`│`) show where a branch continues past the current level.

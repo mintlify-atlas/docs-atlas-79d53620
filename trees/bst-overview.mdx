@@ -1,5 +1,5 @@
 ---
-title: "Binary Search Trees: Structure and Properties"
+title: "Binary Search Trees: Structure and Properties in Python"
 sidebarTitle: "BST Overview"
 description: "Learn the structure and ordering properties of Binary Search Trees, including the Node and BST classes implemented in the UCALDAS Data Structures course."
 ---
@@ -74,16 +74,16 @@ bst.print_tree(bst.root)
 **Expected output:**
 
 ```text
-    ┌── 80
-┌── 70
-│   └── 60
+│       ┌── 80
+│   ┌── 70
+│   │   └── 60
 └── 50
-    ┌── 40
-└── 30
-    └── 20
+    │   ┌── 40
+    └── 30
+        └── 20
 ```
 
-Reading the output: the root (`50`) is printed in the middle; nodes above it belong to the right subtree, nodes below to the left subtree. The `┌──` connector indicates a right child and `└──` indicates a left child.
+Reading the output: the root (`50`) is printed in the middle; nodes above it belong to the right subtree, nodes below to the left subtree. The `┌──` connector indicates a right child and `└──` indicates a left child. Vertical bars (`│`) show where a branch continues past the current level.
 
 <Note>
 This BST implementation uses the **inorder predecessor** — the largest node in the left subtree — as the replacement when deleting a node with two children. Some textbooks use the inorder *successor* instead; both strategies preserve the BST ordering invariant. See [BST Operations](/trees/bst-operations) for the full deletion logic.
