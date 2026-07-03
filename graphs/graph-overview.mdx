@@ -1,0 +1,103 @@
+---
+title: "Graphs: Vertices, Edges, and Weighted Digraphs"
+sidebarTitle: "Graph Overview"
+description: "Understand directed weighted graphs, adjacency list representation, and the Vertex and Graph classes used in the UCALDAS Data Structures course."
+---
+
+Graphs are one of the most expressive data structures in computer science. A **graph** is a collection of **vertices** (also called nodes) connected by **edges**. Graphs can be **directed** — where each edge flows from one vertex to another in a single direction — or **undirected**, where connections are bidirectional. Edges can carry a **weight**, a numeric value that models cost, distance, or priority. Real-world applications include GPS navigation (road networks), social networks (friend connections), airline routing, and dependency resolution in build systems.
+
+---
+
+## Key Concepts
+
+| Term | Definition |
+|---|---|
+| **Vertex** | A node in the graph, identified by a unique `id`. |
+| **Edge** | A directed connection from one vertex (`from`) to another (`to`). |
+| **Weight** | A numeric value assigned to an edge, representing cost or distance. Defaults to `0`. |
+| **Directed Graph** | A graph where every edge has an explicit direction (`from → to`). |
+| **Adjacency List** | A dictionary-based structure where each vertex stores its neighbors and edge weights. |
+
+---
+
+## The Vertex Class
+
+Each node in the graph is represented by a `Vertex` object. It stores its own identifier and a dictionary mapping every outgoing neighbor to the corresponding edge weight.
+
+```python
+class Vertex:
+    def __init__(self, id):
+        self.id = id
+        self.adjacent = {}
+
+    def add_neighbor(self, neighbor, weight=0):
+        self.adjacent[neighbor] = weight
+
+    def get_connections(self):
+        return self.adjacent
+
+    def get_id(self):
+        return self.id
+```
+
+- **`self.id`** — the unique label for this vertex (e.g., `'A'`, `'B'`).
+- **`self.adjacent`** — a Python dictionary that acts as the adjacency list. Keys are neighbor IDs; values are edge weights.
+- **`add_neighbor(neighbor, weight)`** — registers a directed edge from this vertex to `neighbor` with the given `weight`.
+- **`get_connections()`** — returns the full adjacency dictionary.
+- **`get_id()`** — returns this vertex's identifier.
+
+---
+
+## The Graph Class
+
+The `Graph` class is the container for all vertices. It maintains a master dictionary (`vertex_list`) that maps each vertex ID to its `Vertex` object, and a counter (`num_vertex`) that tracks how many vertices exist.
+
+```python
+class Graph:
+    def __init__(self):
+        self.vertex_list = {}
+        self.num_vertex = 0
+
+    def add_vertex(self, id):
+        self.num_vertex += 1
+        new_vertex = Vertex(id)
+        self.vertex_list[id] = new_vertex
+        return new_vertex
+
+    def get_vertex(self, id):
+        return self.vertex_list.get(id)
+
+    def add_edge(self, from_id, to_id, weight=0):
+        if from_id not in self.vertex_list:
+            self.add_vertex(from_id)
+        if to_id not in self.vertex_list:
+            self.add_vertex(to_id)
+        self.vertex_list[from_id].add_neighbor(to_id, weight)
+
+    def get_vertices(self):
+        return self.vertex_list.keys()
+```
+
+- **`self.vertex_list`** — a dictionary keyed by vertex ID, holding every `Vertex` object in the graph.
+- **`self.num_vertex`** — an integer counter incremented each time a new vertex is added.
+- **`add_vertex(id)`** — creates a new `Vertex`, inserts it into `vertex_list`, and returns it.
+- **`get_vertex(id)`** — looks up and returns the `Vertex` for a given ID, or `None` if it does not exist.
+- **`add_edge(from_id, to_id, weight)`** — registers a directed, weighted edge. If either endpoint does not yet exist, it is created automatically.
+- **`get_vertices()`** — returns all vertex IDs currently in the graph.
+
+---
+
+## Quick Start Example
+
+The following snippet builds a small directed weighted graph and prints all vertex IDs:
+
+```python
+g = Graph()
+g.add_edge('A', 'B', 2)
+g.add_edge('B', 'C', 3)
+print(list(g.get_vertices()))  # ['A', 'B', 'C']
+```
+
+<Note>
+`add_edge` automatically creates any vertices that do not already exist. You never need to call `add_vertex` manually before calling `add_edge`.
+</Note>

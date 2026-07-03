@@ -1,0 +1,296 @@
+---
+title: "Homework: BST Search and Node Removal"
+sidebarTitle: "BST Homework"
+description: "Implement and test BST search and node deletion in Python, covering all three removal cases: deleting a leaf, a node with one child, and a node with two children."
+---
+
+This homework implements a full Binary Search Tree (BST) in Python, including `insert`, `search`, and `delete` operations. The deletion logic covers every structural case a node can be in: having no children (leaf), one child, or two children — as well as the special case of deleting the root itself. All six deletion scenarios are validated against a 20-value dataset to confirm the BST invariant is preserved after every operation.
+
+<Note>
+  **Open in Google Colab** →
+  [https://colab.research.google.com/github/tutosrive/ED/blob/from_colab/src/HOMEWORKS/BTS/BTS_search_and_remove.ipynb](https://colab.research.google.com/github/tutosrive/ED/blob/from_colab/src/HOMEWORKS/BTS/BTS_search_and_remove.ipynb)
+</Note>
+
+---
+
+## Full BST Implementation
+
+The implementation uses two classes: `Node` (holding a value plus `left`, `right`, and `parent` pointers) and `BST` (managing insertion, search, deletion, and traversal). The `changeNodePosition` helper centralises all parent-pointer rewiring, keeping the deletion logic clean and reusable.
+
+```python title="bst.py"
+from typing import Optional
+
+class Node:
+    def __init__(self, value, parent=None):
+        self.value = value
+        self.left = None
+        self.right = None
+        self.parent = parent
+
+class BST:
+    def __init__(self):
+        self.root = None
+
+    # ── Insert ──────────────────────────────────────────────────────────────
+    def insert(self, value):
+        new_node = Node(value)
+        if self.root is None:
+            self.root = new_node
+        else:
+            self._insert(self.root, new_node)
+
+    def _insert(self, current_node, new_node):
+        if new_node.value < current_node.value:
+            if current_node.left is None:
+                current_node.left = new_node
+                new_node.parent = current_node
+            else:
+                self._insert(current_node.left, new_node)
+        else:
+            if current_node.right is None:
+                current_node.right = new_node
+                new_node.parent = current_node
+            else:
+                self._insert(current_node.right, new_node)
+
+    # ── Search ──────────────────────────────────────────────────────────────
+    def search(self, value):
+        if self.root is None:
+            print("The tree is empty.")
+            return None
+        return self._search(self.root, value)
+
+    def _search(self, current_node, value):
+        if current_node is None or current_node.value == value:
+            return current_node
+        if value < current_node.value:
+            return self._search(current_node.left, value)
+        return self._search(current_node.right, value)
+
+    # ── Helpers ─────────────────────────────────────────────────────────────
+
+    def _getPredecessor(self, node):
+        """Find the inorder predecessor: the maximum node in the left subtree."""
+        if node.left is not None:
+            current = node.left
+            while current.right is not None:
+                current = current.right
+            return current
+        return None
+
+    def changeNodePosition(self, node_to_replace, new_subtree_root):
+        """Replace one subtree with another, adjusting all parent references."""
+        if node_to_replace.parent is None:        # Replacing the root
+            self.root = new_subtree_root
+        else:
+            if node_to_replace == node_to_replace.parent.left:
+                node_to_replace.parent.left = new_subtree_root
+            else:
+                node_to_replace.parent.right = new_subtree_root
+        if new_subtree_root is not None:
+            new_subtree_root.parent = node_to_replace.parent
+
+    # ── Delete ──────────────────────────────────────────────────────────────
+    def delete(self, value):
+        node_to_delete = self.search(value)
+        if node_to_delete is not None:
+            self._delete(node_to_delete)
+
+    def _delete(self, node_to_delete):
+        # Case 1: leaf — no children
+        if node_to_delete.left is None and node_to_delete.right is None:
+            self.changeNodePosition(node_to_delete, None)
+            return
+
+        # Case 2: two children — replace with inorder predecessor
+        if node_to_delete.left is not None and node_to_delete.right is not None:
+            predecessor = self._getPredecessor(node_to_delete)
+            if predecessor.parent != node_to_delete:   # predecessor is not a direct child
+                self.changeNodePosition(predecessor, predecessor.left)
+                predecessor.left = node_to_delete.left
+                predecessor.left.parent = predecessor
+            self.changeNodePosition(node_to_delete, predecessor)
+            predecessor.right = node_to_delete.right
+            predecessor.right.parent = predecessor
+            return
+
+        # Case 3: one child — replace with that child
+        if node_to_delete.left is not None:
+            self.changeNodePosition(node_to_delete, node_to_delete.left)
+        else:
+            self.changeNodePosition(node_to_delete, node_to_delete.right)
+
+    # ── Traversals ──────────────────────────────────────────────────────────
+    def inorder(self, node=None):
+        if node is None:
+            node = self.root
+        if node.left:
+            self.inorder(node.left)
+        print(node.value, end=" ")
+        if node.right:
+            self.inorder(node.right)
+
+    def pre_order(self, output=[]):
+        if not self.root:
+            print("The tree is empty!")
+        else:
+            print("Pre Order:", end=" ")
+            self.__pre_order(self.root)
+
+    def pos_order(self):
+        if not self.root:
+            print("The tree is empty!")
+        else:
+            print("Pos Order:", end=" ")
+            self.__pos_order(self.root)
+
+    def __pre_order(self, parent):
+        if parent:
+            print(parent.value, end=" ")
+            self.__pre_order(parent.left)
+            self.__pre_order(parent.right)
+
+    def __pos_order(self, parent):
+        if parent:
+            self.__pos_order(parent.left)
+            self.__pos_order(parent.right)
+            print(parent.value, end=" ")
+
+    def print_tree(self, node=None, prefix="", is_left=True):
+        if node is not None:
+            if node.right:
+                new_prefix = prefix + ("│   " if is_left else "    ")
+                self.print_tree(node.right, new_prefix, False)
+            connector = "└── " if is_left else "┌── "
+            print(prefix + connector + str(node.value))
+            if node.left:
+                new_prefix = prefix + ("    " if is_left else "│   ")
+                self.print_tree(node.left, new_prefix, True)
+```
+
+---
+
+## Test Dataset
+
+The 20 insertion values are chosen to produce a balanced-looking BST with nodes at every structural position — leaves, single-child nodes, and multi-child nodes including the root.
+
+```python title="test_values.py"
+values = [50, 30, 70, 20, 40, 60, 80,
+          10, 25, 35, 45, 55, 65, 75, 85,
+          5, 15, 33, 43, 90]
+```
+
+After inserting all 20 values, an inorder traversal yields:
+
+```
+5 10 15 20 25 30 33 35 40 43 45 50 55 60 65 70 75 80 85 90
+```
+
+---
+
+## Deletion Test Cases
+
+Each deletion targets a different structural scenario. The BST invariant — that an inorder traversal always produces sorted output — must hold after every removal.
+
+<Steps>
+  <Step title="Delete leaf node 5">
+    Node `5` has no children. `_delete` matches **Case 1** and calls `changeNodePosition(node, None)`, which simply sets the parent's (`10`) left pointer to `None`. The node is detached with no further rewiring needed.
+
+    ```python title="delete_leaf.py"
+    bst.delete(5)   # 5 is a leaf — no children
+    # Node 10's left pointer is set to None
+    # Inorder: 10 15 20 25 30 33 35 40 43 45 50 55 60 65 70 75 80 85 90
+    ```
+  </Step>
+
+  <Step title="Delete node with one child (35)">
+    Node `35` has only a right child (`33` is its left child after the previous deletion leaves `33` as the single child — specifically, `35` holds left child `33` with no right child). `_delete` matches **Case 3** and calls `changeNodePosition(node_35, node_35.left)`, promoting `33` directly into `35`'s position under parent `40`.
+
+    ```python title="delete_one_child.py"
+    bst.delete(35)  # 35 has one child (33) — replace with child
+    # changeNodePosition(35, 33) — 33 takes 35's place under 40
+    # Inorder: 10 15 20 25 30 33 40 43 45 50 55 60 65 70 75 80 85 90
+    ```
+  </Step>
+
+  <Step title="Delete node with two children (30)">
+    Node `30` has both a left subtree (rooted at `20`) and a right subtree (rooted at `40`). `_delete` matches **Case 2**. `_getPredecessor(30)` walks left to `20`, then follows right pointers as far as possible, landing on `25` — the inorder predecessor.
+
+    Because `25` is not a direct child of `30`, the algorithm first detaches `25` from its position (replacing it with its own left child, if any), then rewires `25` to take over `30`'s left and right subtrees via `changeNodePosition`.
+
+    ```python title="delete_two_children.py"
+    bst.delete(30)  # 30 has two children — replaced by inorder predecessor (25)
+    # predecessor = 25 (rightmost node in left subtree of 30)
+    # 25 inherits 30's left (20) and right (40) subtrees
+    # Inorder: 10 15 20 25 33 40 43 45 50 55 60 65 70 75 80 85 90
+    ```
+  </Step>
+
+  <Step title="Delete the root (50)">
+    Node `50` is the root (`parent is None`) and has two children. `_delete` applies **Case 2** identically — but `changeNodePosition` detects `node_to_replace.parent is None` and assigns `self.root = new_subtree_root` instead of updating a parent pointer. The inorder predecessor of `50` (node `45`) becomes the new root.
+
+    ```python title="delete_root.py"
+    bst.delete(50)  # Root deletion — predecessor 45 becomes new root
+    # changeNodePosition sets self.root = 45
+    # 45 inherits 50's left and right subtrees
+    # Inorder: 10 15 20 25 33 40 43 45 55 60 65 70 75 80 85 90
+    ```
+  </Step>
+
+  <Step title="Delete another two-children node (70)">
+    Node `70` has left child `60` and right child `80`. Its inorder predecessor is `65` (rightmost in its left subtree). `65` is detached from under `60`, then promoted into `70`'s position, inheriting both `60` and `80` as children.
+
+    ```python title="delete_70.py"
+    bst.delete(70)  # Two children — replaced by inorder predecessor (65)
+    # 65 takes 70's position; inherits 60 (left) and 80 (right)
+    # Inorder: 10 15 20 25 33 40 43 45 55 60 65 75 80 85 90
+    ```
+  </Step>
+
+  <Step title="Delete rightmost node (90)">
+    Node `90` is the rightmost node in the tree and has no children (leaf). `_delete` matches **Case 1**: `changeNodePosition(90, None)` sets `85`'s right pointer to `None`.
+
+    ```python title="delete_rightmost.py"
+    bst.delete(90)  # Rightmost leaf — detach from parent 85
+    # 85's right pointer is set to None
+    # Inorder: 10 15 20 25 33 40 43 45 55 60 65 75 80 85
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Running the Tests
+
+The complete test script builds the tree, prints the initial structure, then performs all six deletions in sequence. After each deletion both a visual tree print and an inorder traversal confirm structural correctness.
+
+```python title="run_tests.py"
+bst = BST()
+for v in values:
+    bst.insert(v)
+
+print("Original tree")
+bst.print_tree(bst.root)
+
+bst.pre_order()
+bst.pos_order()
+print("In Order:", end=" ")
+bst.inorder()
+
+# Deletion sequence
+bst.delete(5)    # leaf
+bst.delete(35)   # one child
+bst.delete(30)   # two children
+bst.delete(50)   # root
+bst.delete(70)   # two children
+bst.delete(90)   # rightmost
+
+print("\nFinal inorder traversal:")
+print("In Order:", end=" ")
+bst.inorder()
+# 10 15 20 25 33 40 43 45 55 60 65 75 80 85
+```
+
+<Note>
+  After **each** deletion the BST invariant must be preserved — an inorder traversal (left → root → right) must still yield all remaining values in strictly ascending order. This is the primary correctness check for any BST deletion implementation.
+</Note>

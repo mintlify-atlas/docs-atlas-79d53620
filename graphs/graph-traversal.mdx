@@ -1,0 +1,173 @@
+---
+title: "Graph Visualization with NetworkX and Matplotlib"
+sidebarTitle: "Visualization"
+description: "Render directed weighted graphs as visual diagrams in Python using NetworkX and Matplotlib, converting the custom Graph class to a NetworkX DiGraph."
+---
+
+Understanding the structure of a graph is much easier when you can see it. Visualization reveals topology at a glance — you can spot cycles, isolated vertices, and heavily connected hubs in seconds. In the UCALDAS Data Structures course, graph diagrams are produced by bridging the custom `Graph` / `Vertex` classes with **NetworkX** and **Matplotlib**, two widely used Python libraries for graph analysis and scientific plotting.
+
+---
+
+## Installing Dependencies
+
+<Steps>
+  <Step title="Install the libraries">
+    ```bash
+    pip install networkx matplotlib
+    ```
+  </Step>
+</Steps>
+
+<Note>
+If you are working inside **Google Colab**, both `networkx` and `matplotlib` are pre-installed. You can skip the installation step and proceed directly to importing them.
+</Note>
+
+---
+
+## Converting to NetworkX
+
+NetworkX cannot read the custom `Graph` class directly, so a short loop transfers all edges — along with their weights — into a `nx.DiGraph` object.
+
+```python
+import networkx as nx
+import matplotlib.pyplot as plt
+
+G_nx = nx.DiGraph()
+
+for v_id, vertex in g.vertex_list.items():
+    for neighbor, weight in vertex.get_connections().items():
+        G_nx.add_edge(v_id, neighbor, weight=weight)
+```
+
+- `g.vertex_list` is the master dictionary from the custom `Graph` class.
+- `vertex.get_connections()` returns the adjacency dict `{neighbor_id: weight, ...}`.
+- `nx.DiGraph.add_edge(u, v, weight=w)` registers each directed, weighted edge.
+
+<Note>
+Use `nx.DiGraph()` for **directed** graphs and `nx.Graph()` for **undirected** graphs. Choosing the wrong type will cause arrows to disappear or duplicate edges to appear in the visualization.
+</Note>
+
+---
+
+## Drawing the Graph
+
+Once the NetworkX graph is populated, three steps produce the final diagram: compute a layout, collect edge labels, then draw.
+
+```python
+pos = nx.spring_layout(G_nx, seed=42)
+edge_labels = nx.get_edge_attributes(G_nx, 'weight')
+
+plt.figure(figsize=(8, 6))
+nx.draw(G_nx, pos, with_labels=True, node_color='skyblue', node_size=1500,
+        font_size=12, font_weight='bold', arrows=True)
+nx.draw_networkx_edge_labels(G_nx, pos, edge_labels=edge_labels, font_color='red')
+plt.title("Graph Visualization with NetworkX", fontsize=14)
+plt.show()
+```
+
+| Parameter | Purpose |
+|---|---|
+| `pos` | Dictionary mapping each node to an `(x, y)` coordinate. |
+| `with_labels=True` | Draws vertex IDs inside each node circle. |
+| `node_color='skyblue'` | Fill color for all nodes. |
+| `node_size=1500` | Pixel area of each node circle. |
+| `arrows=True` | Draws arrowheads to indicate edge direction. |
+| `font_color='red'` | Color of the edge-weight labels. |
+
+<Tip>
+Pass `seed=42` (or any fixed integer) to `nx.spring_layout` to get a **reproducible layout**. Without a seed, the spring algorithm starts from random initial positions, so the diagram looks different on every run.
+</Tip>
+
+---
+
+## Advanced Graph Example
+
+The snippet below builds the more complex graph from `Graph.ipynb` — featuring eight vertices, thirteen directed edges, alternative paths, and return edges — and renders it with NetworkX in a single runnable block.
+
+```python
+import networkx as nx
+import matplotlib.pyplot as plt
+
+# ── Custom Graph classes ────────────────────────────────────────────────────
+
+class Vertex:
+    def __init__(self, id):
+        self.id = id
+        self.adjacent = {}
+
+    def add_neighbor(self, neighbor, weight=0):
+        self.adjacent[neighbor] = weight
+
+    def get_connections(self):
+        return self.adjacent
+
+    def get_id(self):
+        return self.id
+
+
+class Graph:
+    def __init__(self):
+        self.vertex_list = {}
+        self.num_vertex = 0
+
+    def add_vertex(self, id):
+        self.num_vertex += 1
+        new_vertex = Vertex(id)
+        self.vertex_list[id] = new_vertex
+        return new_vertex
+
+    def get_vertex(self, id):
+        return self.vertex_list.get(id)
+
+    def add_edge(self, from_id, to_id, weight=0):
+        if from_id not in self.vertex_list:
+            self.add_vertex(from_id)
+        if to_id not in self.vertex_list:
+            self.add_vertex(to_id)
+        self.vertex_list[from_id].add_neighbor(to_id, weight)
+
+    def get_vertices(self):
+        return self.vertex_list.keys()
+
+
+# ── Build the advanced graph ────────────────────────────────────────────────
+
+g = Graph()
+
+# Main "backbone" connections
+g.add_edge('A', 'B', 4)
+g.add_edge('A', 'C', 2)
+g.add_edge('B', 'D', 5)
+g.add_edge('C', 'D', 8)
+g.add_edge('C', 'E', 10)
+g.add_edge('D', 'E', 2)
+g.add_edge('D', 'F', 6)
+g.add_edge('E', 'F', 2)
+g.add_edge('F', 'G', 3)
+
+# Shortcuts and return edges
+g.add_edge('B', 'C', 1)   # Shortcut between B and C
+g.add_edge('E', 'B', 3)   # Return toward B
+g.add_edge('F', 'C', 4)   # Mid-return
+g.add_edge('G', 'H', 1)
+
+# ── Convert to NetworkX and visualize ──────────────────────────────────────
+
+G_nx = nx.DiGraph()
+
+for v_id, vertex in g.vertex_list.items():
+    for neighbor, weight in vertex.get_connections().items():
+        G_nx.add_edge(v_id, neighbor, weight=weight)
+
+pos = nx.spring_layout(G_nx, seed=42)
+edge_labels = nx.get_edge_attributes(G_nx, 'weight')
+
+plt.figure(figsize=(8, 6))
+nx.draw(G_nx, pos, with_labels=True, node_color='skyblue', node_size=1500,
+        font_size=12, font_weight='bold', arrows=True)
+nx.draw_networkx_edge_labels(G_nx, pos, edge_labels=edge_labels, font_color='red')
+plt.title("Graph Visualization with NetworkX", fontsize=14)
+plt.show()
+```
+
+This graph contains alternative paths (e.g., `A→B→D` vs. `A→C→D`) and return edges (`E→B`, `F→C`), making it a good test case for shortest-path algorithms such as Dijkstra or Bellman-Ford.

@@ -1,0 +1,143 @@
+---
+title: "BST Traversals: Inorder, Pre-order, and Post-order"
+sidebarTitle: "Traversals"
+description: "Explore the three depth-first traversal orders for Binary Search Trees — inorder, pre-order, and post-order — with Python implementations and example output."
+---
+
+A **traversal** visits every node in a tree exactly once; the only thing that varies is the *order* in which a node is processed relative to its children. Binary trees admit three classic depth-first orderings — inorder, pre-order, and post-order — each of which has distinct algorithmic uses. Choosing the right traversal can mean the difference between producing a sorted sequence, serialising the tree structure, or computing a value that depends on all descendants before their ancestor. The UCALDAS BST implementation provides all three, plus a visual `print_tree` helper.
+
+## Inorder (Left → Root → Right)
+
+Inorder traversal processes the **left subtree first**, then the **current node**, then the **right subtree**. Because of the BST ordering property, this always visits nodes in **ascending sorted order** — a useful property for producing sorted output or checking whether a tree is a valid BST.
+
+```python inorder method
+def inorder(self, node=None):
+    if node is None:
+        node = self.root
+    if node.left:
+        self.inorder(node.left)
+    print(node.value, end=" ")
+    if node.right:
+        self.inorder(node.right)
+```
+
+`inorder` defaults to starting at the root when called with no arguments, but it can also be called on any subtree root by passing a node explicitly — useful for partial traversals during debugging.
+
+<Tip>
+If the values printed by `inorder` are **not** in ascending order, the BST ordering invariant has been violated somewhere in the tree — this makes `inorder` a quick sanity-check tool.
+</Tip>
+
+## Pre-order (Root → Left → Right)
+
+Pre-order traversal processes the **current node first**, then recurses into the left subtree, then the right subtree. The root is always the first node printed. This order is commonly used to **serialise or clone** a tree, because inserting nodes in pre-order sequence into a new BST recreates the exact same structure.
+
+```python pre_order and __pre_order methods
+def pre_order(self, output=[]):
+    if not self.root:
+        print("The tree is empty!")
+    else:
+        print(f'Pre Order:', end=' ')
+        self.__pre_order(self.root)
+
+def __pre_order(self, parent):
+    if parent:
+        print(parent.value, end=' ')
+        self.__pre_order(parent.left)
+        self.__pre_order(parent.right)
+```
+
+The public `pre_order` method handles the empty-tree guard and prints the label, then delegates the recursive work to the private `__pre_order` helper. The name-mangling prefix (`__`) follows Python convention for implementation-private methods that should not be called directly.
+
+## Post-order (Left → Right → Root)
+
+Post-order traversal processes both subtrees **before** the current node. The root is always the **last** node printed. This order is natural for operations that must fully process all descendants before acting on an ancestor — for example, computing the size of each subtree, or deleting an entire tree without leaving dangling parent pointers.
+
+```python pos_order and __pos_order methods
+def pos_order(self):
+    if not self.root:
+        print("The tree is empty!")
+    else:
+        print(f'Pos Order:', end=' ')
+        self.__pos_order(self.root)
+
+def __pos_order(self, parent):
+    if parent:
+        self.__pos_order(parent.left)
+        self.__pos_order(parent.right)
+        print(parent.value, end=' ')
+```
+
+## Complete Usage Example
+
+The following example builds a small BST and runs all three traversals, demonstrating how the same set of nodes produces three different orderings:
+
+```python All three traversals on the same tree
+bst = BST()
+for v in [50, 30, 70, 20, 40]:
+    bst.insert(v)
+
+print("In Order: ", end="")
+bst.inorder()       # 20 30 40 50 70
+
+bst.pre_order()     # Pre Order: 50 30 20 40 70
+bst.pos_order()     # Pos Order: 20 40 30 70 50
+```
+
+**Output:**
+
+```text
+In Order: 20 30 40 50 70
+Pre Order: 50 30 20 40 70
+Pos Order: 20 40 30 70 50
+```
+
+Notice that inorder produces the values in ascending order (`20 30 40 50 70`), pre-order starts with the root (`50`), and post-order ends with the root (`50`).
+
+## Printing the Tree
+
+The `print_tree` method produces a sideways ASCII representation of the tree structure — right subtree at the top, left subtree at the bottom — which is much easier to read in a terminal than a flat list of values.
+
+```python print_tree method
+def print_tree(self, node=None, prefix="", is_left=True):
+    if node is not None:
+        if node.right:
+            new_prefix = prefix + ("│   " if is_left else "    ")
+            self.print_tree(node.right, new_prefix, False)
+
+        connector = "└── " if is_left else "┌── "
+        print(prefix + connector + str(node.value))
+
+        if node.left:
+            new_prefix = prefix + ("    " if is_left else "│   ")
+            self.print_tree(node.left, new_prefix, True)
+```
+
+Call it by passing the root node:
+
+```python Printing the tree visually
+bst.print_tree(bst.root)
+```
+
+```text
+    ┌── 80
+┌── 70
+│   └── 60
+└── 50
+    ┌── 40
+└── 30
+    └── 20
+```
+
+**Reading the output:** rotate the diagram 90° counter-clockwise — the topmost line is the rightmost node and the bottommost line is the leftmost node. The `┌──` connector marks a right child; `└──` marks a left child. Vertical bars (`│`) show where a branch continues past the current level.
+
+<Note>
+`print_tree` is a **pre-order** traversal internally: it processes the right subtree (printed above), then the current node, then the left subtree (printed below). The visual rotation is a side-effect of printing right-to-left when displayed vertically in a terminal.
+</Note>
+
+## Traversal Comparison
+
+| Traversal | Visit Order | Output for `[50, 30, 70, 20, 40]` | Common Use |
+|---|---|---|---|
+| **Inorder** | Left → Root → Right | `20 30 40 50 70` | Sorted output, BST validation |
+| **Pre-order** | Root → Left → Right | `50 30 20 40 70` | Tree serialisation, cloning |
+| **Post-order** | Left → Right → Root | `20 40 30 70 50` | Tree deletion, expression evaluation |

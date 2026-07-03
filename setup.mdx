@@ -1,0 +1,92 @@
+---
+title: "Set Up Your Python Environment for Data Structures"
+sidebarTitle: "Setup"
+description: "Configure Google Colab or a local Python environment to run the ED course notebooks, including required packages like typing, random, and networkx."
+---
+
+You can run every ED course notebook in one of two ways: through **Google Colab** — the recommended zero-install option that works entirely in your browser — or in a **local Python environment** for those who prefer to work offline or want full control over their tooling. Both approaches give you access to the same notebooks and produce identical results.
+
+## Option 1: Google Colab (Recommended)
+
+Google Colab is a free, cloud-hosted Jupyter environment. No installation is needed — just a Google account and a browser.
+
+<Steps>
+  <Step title="Open the GitHub repository">
+    Go to [https://github.com/tutosrive/ed](https://github.com/tutosrive/ed) in your browser.
+  </Step>
+  <Step title="Navigate to a notebook">
+    Browse to the notebook you want to open. For example, the first workshop is located at:
+
+    ```text
+    src/workshops/colab/workshop_1_ED.ipynb
+    ```
+  </Step>
+  <Step title="Click the Open in Colab badge">
+    At the top of each notebook file on GitHub you will find an **Open in Colab** badge. Click it to launch the notebook directly in Google Colab — no download required.
+  </Step>
+  <Step title="Run cells top to bottom">
+    Once the notebook is open in Colab, run each cell from top to bottom using **Shift + Enter** or the **Runtime → Run all** menu option. All imports and dependencies are handled automatically within the notebook.
+  </Step>
+</Steps>
+
+## Option 2: Local Python Environment
+
+If you prefer to run notebooks on your own machine, follow these steps to configure a local Jupyter environment.
+
+<Steps>
+  <Step title="Verify your Python version">
+    Ensure Python 3.8 or higher is installed on your system:
+
+    ```bash
+    python --version
+    ```
+  </Step>
+  <Step title="Install Jupyter">
+    Install the Jupyter notebook server via pip:
+
+    ```bash
+    pip install jupyter
+    ```
+  </Step>
+  <Step title="Install required packages">
+    Install the third-party packages used by the course notebooks:
+
+    ```bash
+    pip install networkx matplotlib
+    ```
+  </Step>
+  <Step title="Clone the repository">
+    Clone the ED repository to your local machine:
+
+    ```bash
+    git clone https://github.com/tutosrive/ed.git
+    cd ed
+    ```
+  </Step>
+  <Step title="Launch Jupyter Notebook">
+    Start the Jupyter notebook server from the repository root:
+
+    ```bash
+    jupyter notebook
+    ```
+
+    Your browser will open the Jupyter file browser. Navigate to `src/workshops/colab/` or any other folder to open a notebook.
+  </Step>
+</Steps>
+
+## Required Packages
+
+The ED course notebooks rely on the following Python packages:
+
+| Package      | Source   | Purpose                                                     |
+| ------------ | -------- | ----------------------------------------------------------- |
+| `typing`     | stdlib   | Type hints for function signatures (e.g. `Union`, `List`)  |
+| `random`     | stdlib   | Generating random integers for test cases                   |
+| `networkx`   | PyPI     | Creating and analyzing graph data structures                |
+| `matplotlib` | PyPI     | Visualizing graphs and algorithm outputs                    |
+
+The `typing` and `random` modules ship with Python and require no installation. Only `networkx` and `matplotlib` need to be installed separately — they are already available in every Google Colab runtime by default.
+
+<Tip>
+  Google Colab is the easiest way to get started. It comes with `networkx` and `matplotlib` pre-installed, persists your work to Google Drive, and lets you share notebooks with teammates via a single link — all without touching your local Python environment.
+</Tip>

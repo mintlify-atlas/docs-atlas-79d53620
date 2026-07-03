@@ -1,0 +1,90 @@
+---
+title: "Binary Search Trees: Structure and Properties"
+sidebarTitle: "BST Overview"
+description: "Learn the structure and ordering properties of Binary Search Trees, including the Node and BST classes implemented in the UCALDAS Data Structures course."
+---
+
+A **Binary Search Tree (BST)** is a node-based data structure in which every node stores a value and maintains two child pointers — `left` and `right` — together with a `parent` back-pointer. Because values are arranged so that every key in a node's left subtree is strictly smaller than the node's key, and every key in the right subtree is greater or equal, the tree can locate, insert, or remove any value in **O(log n)** time on average. This ordering property makes BSTs one of the most fundamental structures in computer science, powering everything from database indexes to symbol tables in compilers.
+
+## BST Properties
+
+The central invariant that defines a BST is the **ordering property**:
+
+> For every node `N` in the tree:
+> - All values in the **left** subtree of `N` are **strictly less than** `N.value`.
+> - All values in the **right** subtree of `N` are **greater than or equal to** `N.value`.
+
+This property holds recursively for every subtree, not just the root. As a result:
+
+| Property | Detail |
+|---|---|
+| **Search complexity** | O(log n) average, O(n) worst case (degenerate tree) |
+| **Insert complexity** | O(log n) average |
+| **Delete complexity** | O(log n) average |
+| **Inorder traversal** | Visits all nodes in sorted (ascending) order |
+| **Space complexity** | O(n) |
+
+A tree is considered *degenerate* (or *unbalanced*) when insertions are made in sorted order, reducing it to a linked list. Self-balancing variants such as AVL trees and Red-Black trees address this at the cost of extra bookkeeping.
+
+## The Node Class
+
+Each element in the tree is represented by a `Node` object. The UCALDAS implementation tracks both children **and** the parent, which simplifies deletion without requiring an explicit stack.
+
+```python Node class
+class Node:
+    def __init__(self, value, parent=None):
+        self.value = value
+        self.left = None
+        self.right = None
+        self.parent = parent
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `value` | any comparable | The data stored in this node |
+| `left` | `Node \| None` | Pointer to the left child (smaller values) |
+| `right` | `Node \| None` | Pointer to the right child (larger or equal values) |
+| `parent` | `Node \| None` | Pointer to the parent node; `None` for the root |
+
+When a node is first created with `Node(value)`, its `left`, `right`, and `parent` fields all default to `None`. The `parent` field is wired up by `_insert` and `changeNodePosition` as the tree is mutated.
+
+## The BST Class
+
+The `BST` class wraps the root node and exposes all tree operations through a clean public interface. Its initializer is intentionally minimal — it simply sets the root to `None`, representing an empty tree.
+
+```python BST initializer
+class BST:
+    def __init__(self):
+        self.root = None
+```
+
+### Quick Usage Example
+
+The following snippet builds the BST shown in the diagram below, then prints it to the console:
+
+```python Building and printing a BST
+bst = BST()
+values = [50, 30, 70, 20, 40, 60, 80]
+for v in values:
+    bst.insert(v)
+
+bst.print_tree(bst.root)
+```
+
+**Expected output:**
+
+```text
+    ┌── 80
+┌── 70
+│   └── 60
+└── 50
+    ┌── 40
+└── 30
+    └── 20
+```
+
+Reading the output: the root (`50`) is printed in the middle; nodes above it belong to the right subtree, nodes below to the left subtree. The `┌──` connector indicates a right child and `└──` indicates a left child.
+
+<Note>
+This BST implementation uses the **inorder predecessor** — the largest node in the left subtree — as the replacement when deleting a node with two children. Some textbooks use the inorder *successor* instead; both strategies preserve the BST ordering invariant. See [BST Operations](/trees/bst-operations) for the full deletion logic.
+</Note>

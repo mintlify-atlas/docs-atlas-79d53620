@@ -1,0 +1,168 @@
+---
+title: "Stack vs Tail Recursion: Memory and Performance"
+sidebarTitle: "Stack vs Tail"
+description: "Compare LIFO stack recursion and FIFO tail recursion in Python using factorial, list summation, and Fibonacci examples with memory analysis."
+---
+
+Not all recursion behaves the same way in memory. **Stack (LIFO) recursion** leaves a chain of suspended call frames on the stack — each one waiting for the result of the call below it before it can finish. **Tail (FIFO) recursion** places the recursive call at the very end of the function, passing all intermediate state forward as arguments so that, in languages that support it, no waiting frame needs to be preserved. Understanding the difference is essential when choosing a recursive strategy for production code, especially in Python where call-stack depth is limited.
+
+---
+
+## Stack Recursion (LIFO) — Factorial
+
+In the stack (LIFO) model, the recursive call is **not** the last operation. The caller must wait to receive the return value and then perform additional work (here, a multiplication) before it can return. This means every pending call occupies a live frame on the call stack until the base case unwinds all the way back.
+
+```python factorial_pila.py
+# If n == 5
+# Factorial(n) = 5x4x3x2x1 = 120
+# Base Case: n == 2 (Any value by 1 is the same value)
+
+def factorial_pila(n:int):
+  if n < 0:
+    # Not missing the joker...
+    return -1
+  elif n == 0:
+    return 0
+  elif n in [2, 1]:
+    return n
+
+  return n * factorial_pila(n-1)
+```
+
+**How the stack grows for `factorial_pila(5)`:**
+
+<Steps>
+  <Step title="factorial_pila(5) calls factorial_pila(4)">
+    The frame for `n=5` is suspended on the stack, waiting to multiply the result by `5`.
+  </Step>
+  <Step title="factorial_pila(4) calls factorial_pila(3)">
+    A new frame for `n=4` is pushed. It too waits to multiply by `4`. The stack now holds two suspended frames.
+  </Step>
+  <Step title="Recursion reaches the base case at n=2">
+    `factorial_pila(2)` returns `2` immediately. The stack begins to unwind.
+  </Step>
+  <Step title="Stack unwinds LIFO">
+    `n=3` resumes: `3 * 2 = 6`. Then `n=4`: `4 * 6 = 24`. Then `n=5`: `5 * 24 = 120`. Each frame is popped in reverse order — Last In, First Out.
+  </Step>
+</Steps>
+
+The key cost: for input `n`, this approach allocates **O(n) stack frames** simultaneously.
+
+---
+
+## Tail Recursion (FIFO) — Factorial
+
+In the tail (FIFO) model, the recursive call **is** the very last thing the function does. Instead of waiting for a return value to act upon, all intermediate state is threaded forward as an argument (here, a single-element list `array` acts as the accumulator). The current frame has nothing left to do once the recursive call is made, so in a tail-call–optimizing runtime it could be discarded immediately.
+
+```python factorial_cola.py
+# If n == 5
+# Factorial(n) = 5x4x3x2x1 = 120
+# Base Case: n == 2 (Any value by 1 is the same value)
+
+def factorial_cola(n:int, array:list[int]):
+  if n < 0:
+    # Not missing the joker...
+    array[0] = -1
+  elif n == 0:
+    array[0] = 0
+  elif n > 1:
+    # Only if array[0] from begin is 1
+    # To can get the product (array[0] * n)...
+    array[0] *= n
+    factorial_cola(n-1, array)
+```
+
+**Usage example:**
+
+```python
+n: int = 10
+fact_cola: list[int] = [1]   # accumulator must start at 1
+
+factorial_cola(n, fact_cola)
+print(f"The factorial of {n} (Using FIFO), is: {fact_cola[0]}")
+# The factorial of 10 (Using FIFO), is: 3628800
+```
+
+**Why the accumulator starts at `1`:** The running product is stored in `array[0]`. Each call multiplies `array[0]` by the current `n` before decrementing `n`. Starting at `1` (the multiplicative identity) ensures the first multiplication — `1 * n` — is correct.
+
+<Note>
+  Python uses a **mutable list** (`array`) instead of a plain integer because integers are immutable in Python. A list passed by reference lets every recursive frame read and write the same memory location, simulating the in-place accumulator update that tail-call–optimized languages handle natively.
+</Note>
+
+---
+
+## Tail Recursion — List Sum
+
+The same accumulator pattern extends naturally to iterating over a sequence. `list_sum` traverses an array index by index, adding each element to a shared accumulator and moving forward — never backward, never waiting.
+
+```python list_sum.py
+# Base Case: When index reaches len(array)
+
+def list_sum(index:int, array:list[int], sum:list[int]) -> None:
+  if index >= 0 and index < len(array):
+    sum[0] += array[index]
+    list_sum(index+1, array, sum)
+```
+
+**Usage example:**
+
+```python
+sum: list[int] = [0]
+num_array: list[int] = [0, 1, 2, 3, 4]
+
+list_sum(0, num_array, sum)
+
+print(f"The addition of all elements is (FIFO): {sum[0]}")
+# The addition of all elements is (FIFO): 10
+```
+
+The recursion terminates naturally when `index` reaches `len(array)`, at which point the `if` condition is `False` and the function returns `None` without further calls. Because the recursive call is always the last statement — and there is no pending arithmetic on return — this is a pure tail-recursive pattern.
+
+---
+
+## Tail Recursion — Fibonacci
+
+The tail-recursive Fibonacci passes the two most recent values (`left` and `right`) forward as parameters rather than branching into two separate recursive calls. This collapses the O(2ⁿ) call tree of naïve Fibonacci into a linear O(n) chain, and the accumulator `suma` captures the latest computed value.
+
+```python fibonacci_tail.py
+def fibonacci(n:int, suma:list[int] = [0], left:int = 0, right:int = 1):
+	# To avoid use the Return
+	if not n in [0, 1]:
+		suma[0] = left + right
+
+		# Like bubble sort
+		left, right = right, suma[0]
+		fibonacci(n-1, suma, left, right)
+```
+
+**Usage example:**
+
+```python
+suma = [0]
+n: int = 15
+
+fibonacci(n, suma)
+
+print(f"The Fibonacci Serie for {n} is: {suma[0]}")
+# The Fibonacci Serie for 15 is: 610
+```
+
+<Note>
+  Always pass an explicit `suma = [0]` when calling `fibonacci` at the top level. Python evaluates mutable default arguments **once** at function definition time, so the default `[0]` list would retain its value from a previous call if not overridden. Passing a fresh list on every invocation avoids this subtle bug.
+</Note>
+
+---
+
+## Comparison: Stack vs Tail Recursion
+
+| Approach | Memory Pattern | Python Optimization | Best For |
+|---|---|---|---|
+| **Stack (LIFO)** | O(n) frames on call stack; each frame waits for the result below | None — Python preserves every frame | Problems that naturally combine sub-results on the way back (e.g., binary search, tree traversal) |
+| **Tail (FIFO) with accumulator** | O(1) logical state per step; accumulator passed forward | Simulated via mutable accumulator list | Linear iteration (factorial, list sum, linear Fibonacci) |
+| **Memoized Stack** | O(n) cache + O(n) stack depth on first run; O(1) on cache hits | Reduces duplicate sub-calls from O(2ⁿ) to O(n) | Overlapping sub-problems like Fibonacci where results are reused |
+
+---
+
+<Tip>
+  Python **does not perform tail-call optimization (TCO)**. Even a perfectly written tail-recursive function still allocates a new stack frame for every call, so the call depth limit of 1 000 applies equally to both styles. The accumulator pattern in `factorial_cola`, `list_sum`, and `fibonacci` **simulates** TCO semantics — state is carried forward rather than waited upon — but Python's runtime does not collapse those frames. For inputs large enough to exceed `sys.getrecursionlimit()`, convert the tail-recursive pattern to an explicit `while` loop to achieve true O(1) stack usage.
+</Tip>

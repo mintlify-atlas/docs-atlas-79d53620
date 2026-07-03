@@ -1,0 +1,206 @@
+---
+title: "BST Operations: Insert, Search, and Delete"
+sidebarTitle: "BST Operations"
+description: "Implement insert, search, and delete operations on a Binary Search Tree in Python, covering all three deletion cases: leaf, one child, and two children."
+---
+
+The three mutating operations on a Binary Search Tree — **insert**, **search**, and **delete** — each exploit the ordering invariant to navigate the tree without examining every node. On a balanced tree of `n` nodes, all three run in **O(log n)** average time because each comparison eliminates roughly half of the remaining nodes. In the worst case (a fully degenerate tree), performance degrades to **O(n)**. Understanding how these operations maintain the BST property is essential before moving on to self-balancing variants.
+
+## Insert
+
+Insertion walks from the root toward a leaf, turning left when the new value is smaller than the current node and right when it is greater or equal. When it reaches an empty child slot, it places the new node there and sets up the parent back-pointer.
+
+```python insert and _insert methods
+def insert(self, value):
+    new_node = Node(value)
+    if self.root is None:
+        self.root = new_node
+    else:
+        self._insert(self.root, new_node)
+
+def _insert(self, current_node, new_node):
+    if new_node.value < current_node.value:
+        if current_node.left is None:
+            current_node.left = new_node
+            new_node.parent = current_node
+        else:
+            self._insert(current_node.left, new_node)
+    else:
+        if current_node.right is None:
+            current_node.right = new_node
+            new_node.parent = current_node
+        else:
+            self._insert(current_node.right, new_node)
+```
+
+**How it works:**
+
+1. `insert` creates the `Node` and delegates to `_insert` unless the tree is empty (in which case the new node becomes the root directly).
+2. `_insert` is recursive. At each level it compares `new_node.value` with `current_node.value` and descends left or right accordingly.
+3. When an empty slot (`None`) is found, the node is attached and `new_node.parent` is set to the current node — keeping the back-pointer accurate.
+
+**Example — inserting a new value into an existing tree:**
+
+```python Inserting a value
+bst = BST()
+for v in [50, 30, 70]:
+    bst.insert(v)
+
+bst.insert(40)   # 40 < 50, go left → 40 > 30, go right → slot empty, insert
+bst.print_tree(bst.root)
+```
+
+```text
+┌── 70
+└── 50
+    ┌── 40
+└── 30
+```
+
+## Search
+
+Search uses the same left-or-right navigation as insert, but instead of adding a node it looks for an existing value. It returns the matching `Node` object, or `None` if the value is not present.
+
+```python search and _search methods
+def search(self, value):
+    if self.root is None:
+        print("The tree is empty.")
+        return None
+    else:
+        return self._search(self.root, value)
+
+def _search(self, current_node, value):
+    if current_node is None or current_node.value == value:
+        return current_node
+    if value < current_node.value:
+        return self._search(current_node.left, value)
+    return self._search(current_node.right, value)
+```
+
+The base case `current_node is None` is reached when the target value is not in the tree — the search has fallen off the bottom without finding a match. The other base case `current_node.value == value` returns the found node immediately.
+
+**Example:**
+
+```python Searching for a value
+node = bst.search(40)
+print(node.value)  # 40
+```
+
+<Tip>
+`search` is used internally by `delete` to locate the node before removing it. Keeping search as a separate, composable method avoids duplicating the traversal logic.
+</Tip>
+
+## Delete
+
+Deletion is the most complex BST operation because removing a node must preserve the ordering invariant for every node in the tree. There are exactly three structural cases depending on how many children the target node has.
+
+<Steps>
+  <Step title="Case 1 — Leaf node (no children)">
+    A leaf node can be removed by simply detaching it from its parent. The helper `changeNodePosition` is called with `None` as the replacement, which clears the parent's child pointer.
+
+    ```python Deleting a leaf node
+    # Case 1: node is a leaf (no children)
+    if node_to_delete.left is None and node_to_delete.right is None:
+        self.changeNodePosition(node_to_delete, None)
+        return
+    ```
+
+    **Example:** Deleting `20` from `[50, 30, 70, 20, 40]` — node `20` has no children, so `30.left` is set to `None`.
+  </Step>
+
+  <Step title="Case 2 — Node with two children">
+    When the target has both a left and a right child, a direct removal would leave two orphaned subtrees. The solution is to find the **inorder predecessor** — the largest value in the left subtree — and promote it into the deleted node's position. This preserves the BST ordering because the predecessor is, by definition, larger than everything else in the left subtree and smaller than everything in the right subtree.
+
+    ```python Deleting a node with two children
+    # Case 2: node has two children
+    if node_to_delete.left is not None and node_to_delete.right is not None:
+        predecessor = self._getPredecessor(node_to_delete)
+        if predecessor.parent != node_to_delete:  # predecessor is not a direct child
+            self.changeNodePosition(predecessor, predecessor.left)
+            predecessor.left = node_to_delete.left
+            predecessor.left.parent = predecessor
+        self.changeNodePosition(node_to_delete, predecessor)
+        predecessor.right = node_to_delete.right
+        predecessor.right.parent = predecessor
+        return
+    ```
+
+    The extra `if predecessor.parent != node_to_delete` guard handles the sub-case where the predecessor is the direct left child of the deleted node (i.e., the left child has no right subtree). In that case, the predecessor does not need to be detached from its current position before being linked in.
+  </Step>
+
+  <Step title="Case 3 — Node with one child">
+    When the target has exactly one child, that child simply slides up into the deleted node's position. `changeNodePosition` rewires the parent pointer and the grandparent's child slot in a single call.
+
+    ```python Deleting a node with one child
+    # Case 3: node has only one child
+    if node_to_delete.left is not None:
+        self.changeNodePosition(node_to_delete, node_to_delete.left)
+    else:
+        self.changeNodePosition(node_to_delete, node_to_delete.right)
+    ```
+  </Step>
+</Steps>
+
+### Supporting Methods
+
+The three cases above rely on two helpers: `_getPredecessor` (finds the largest node in the left subtree) and `changeNodePosition` (rewires parent/child pointers atomically).
+
+```python _getPredecessor — finds the inorder predecessor
+def _getPredecessor(self, node):
+    if node.left is not None:
+        current = node.left
+        while current.right is not None:
+            current = current.right
+        return current
+    return None
+```
+
+```python changeNodePosition — replaces one subtree with another
+def changeNodePosition(self, node_to_replace, new_subtree_root):
+    if node_to_replace.parent is None:  # If replacing the root
+        self.root = new_subtree_root
+    else:
+        if node_to_replace == node_to_replace.parent.left:
+            node_to_replace.parent.left = new_subtree_root
+        else:
+            node_to_replace.parent.right = new_subtree_root
+    if new_subtree_root is not None:
+        new_subtree_root.parent = node_to_replace.parent
+```
+
+### Full delete and _delete methods
+
+```python Public delete entry point and internal _delete dispatcher
+def delete(self, value):
+    node_to_delete = self.search(value)
+    if node_to_delete is not None:
+        self._delete(node_to_delete)
+
+def _delete(self, node_to_delete):
+    # Case 1: node is a leaf (no children)
+    if node_to_delete.left is None and node_to_delete.right is None:
+        self.changeNodePosition(node_to_delete, None)
+        return
+
+    # Case 2: node has two children
+    if node_to_delete.left is not None and node_to_delete.right is not None:
+        predecessor = self._getPredecessor(node_to_delete)
+        if predecessor.parent != node_to_delete:
+            self.changeNodePosition(predecessor, predecessor.left)
+            predecessor.left = node_to_delete.left
+            predecessor.left.parent = predecessor
+        self.changeNodePosition(node_to_delete, predecessor)
+        predecessor.right = node_to_delete.right
+        predecessor.right.parent = predecessor
+        return
+
+    # Case 3: node has only one child
+    if node_to_delete.left is not None:
+        self.changeNodePosition(node_to_delete, node_to_delete.left)
+    else:
+        self.changeNodePosition(node_to_delete, node_to_delete.right)
+```
+
+<Warning>
+Deleting the **root node** is handled automatically by `changeNodePosition`: when `node_to_replace.parent is None`, the method updates `self.root` directly instead of modifying a parent's child pointer. No special-case code is needed in `_delete` — but be aware that after deleting the root with two children, the inorder predecessor of the original root becomes the new root.
+</Warning>

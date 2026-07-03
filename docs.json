@@ -1,72 +1,51 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mintlify Starter Kit",
+  "name": "ED — Data Structures",
+  "theme": "palm",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#7c3cec",
+    "light": "#bc97f4",
+    "dark": "#7c3cec"
   },
-  "favicon": "/favicon.svg",
-  "navigation": {
-    "pages": [
-      {
-        "group": "Getting Started",
-        "pages": [
-          "index",
-          "quickstart"
-        ]
-      }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
+  "favicon": "https://media.brand.dev/ddee60ee-5bd8-48ee-9908-19e049748ecb.svg",
   "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
     "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://app.mintlify.com"
+      "type": "github",
+      "href": "https://github.com/tutosrive/ed"
     }
-  },
-  "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "chatgpt",
-      "claude",
-      "perplexity",
-      "mcp",
-      "cursor",
-      "vscode"
-    ]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "github": "https://github.com/tutosrive/ed"
     }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Course Overview",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": ["introduction", "setup"]
+          },
+          {
+            "group": "Recursion",
+            "pages": ["recursion/concepts", "recursion/stack-vs-tail"]
+          },
+          {
+            "group": "Trees",
+            "pages": ["trees/bst-overview", "trees/bst-operations", "trees/traversals"]
+          },
+          {
+            "group": "Graphs",
+            "pages": ["graphs/graph-overview", "graphs/adjacency-list", "graphs/graph-traversal"]
+          },
+          {
+            "group": "Workshops & Homeworks",
+            "pages": ["workshops/workshop-1", "homeworks/bst-search-remove"]
+          }
+        ]
+      }
+    ]
   }
 }

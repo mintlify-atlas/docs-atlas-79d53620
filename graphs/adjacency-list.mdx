@@ -1,0 +1,123 @@
+---
+title: "Adjacency List Representation for Graphs in Python"
+sidebarTitle: "Adjacency List"
+description: "Build directed weighted graphs using Python dictionaries as adjacency lists, with methods to add vertices, connect edges, and inspect neighbors."
+---
+
+An **adjacency list** is the standard data structure for representing sparse graphs. Unlike an adjacency matrix — which allocates an `n × n` grid even when most cells are empty — an adjacency list only records edges that actually exist. For a graph with `V` vertices and `E` edges, the adjacency list uses `O(V + E)` space, making it far more memory-efficient when the number of edges is much smaller than `V²`. In the UCALDAS Data Structures course, this structure is implemented using Python dictionaries inside each `Vertex` object.
+
+---
+
+## Adding Vertices
+
+`add_vertex(id)` creates a new `Vertex`, registers it in the graph's master dictionary, increments the vertex counter, and returns the new object.
+
+```python
+def add_vertex(self, id):
+    self.num_vertex += 1
+    new_vertex = Vertex(id)
+    self.vertex_list[id] = new_vertex
+    return new_vertex
+```
+
+The returned `Vertex` can be used immediately — for example, to inspect it or chain further operations.
+
+---
+
+## Adding Edges
+
+`add_edge(from_id, to_id, weight)` creates a **directed** edge from `from_id` to `to_id` with the given weight. If either vertex does not exist yet, it is created on the spot.
+
+```python
+def add_edge(self, from_id, to_id, weight=0):
+    if from_id not in self.vertex_list:
+        self.add_vertex(from_id)
+    if to_id not in self.vertex_list:
+        self.add_vertex(to_id)
+    self.vertex_list[from_id].add_neighbor(to_id, weight)
+```
+
+The `weight` parameter defaults to `0`, so unweighted graphs work without any extra arguments.
+
+---
+
+## Inspecting the Graph
+
+### Graph-level queries
+
+```python
+# Look up a single vertex by ID
+vertex_a = g.get_vertex('A')
+
+# Iterate over all vertex IDs
+for v_id in g.get_vertices():
+    print(v_id)
+```
+
+- **`get_vertex(id)`** — returns the `Vertex` object for the given ID, or `None` if the vertex does not exist.
+- **`get_vertices()`** — returns a view of all vertex IDs in the graph.
+
+### Vertex-level queries
+
+```python
+vertex = g.get_vertex('B')
+
+# Get the vertex's own ID
+print(vertex.get_id())           # 'B'
+
+# Get all outgoing neighbors and their weights
+print(vertex.get_connections())  # {'C': 3, 'G': 5}
+```
+
+<Tip>
+The adjacency dictionary returned by `get_connections()` stores **neighbor IDs** as keys and **edge weights** as values. Iterating over `.items()` gives you both at once.
+</Tip>
+
+---
+
+## Complete Working Example
+
+The graph below models a directed network with vertices `A` through `H`, including a back edge from `D` back to `B`:
+
+```
+A → B (2)
+B → C (3)   B → G (5)
+C → D (1)
+D → E (4)   D → B (1)   ← back edge
+E → F (2)
+G → H (2)
+```
+
+```python
+g = Graph()
+g.add_edge('A', 'B', 2)
+g.add_edge('B', 'C', 3)
+g.add_edge('C', 'D', 1)
+g.add_edge('D', 'E', 4)
+g.add_edge('E', 'F', 2)
+g.add_edge('B', 'G', 5)
+g.add_edge('G', 'H', 2)
+g.add_edge('D', 'B', 1)
+
+for v_id in g.get_vertices():
+    vertex = g.get_vertex(v_id)
+    for neighbor, weight in vertex.get_connections().items():
+        print(f"{v_id} → {neighbor} (weight: {weight})")
+```
+
+**Sample output:**
+
+```
+A → B (weight: 2)
+B → C (weight: 3)
+B → G (weight: 5)
+C → D (weight: 1)
+D → E (weight: 4)
+D → B (weight: 1)
+E → F (weight: 2)
+G → H (weight: 2)
+```
+
+<Note>
+The back edge `D → B` creates a **cycle** in the graph. Algorithms that traverse this graph (such as DFS or BFS) must track visited vertices to avoid infinite loops.
+</Note>

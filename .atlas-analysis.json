@@ -1,0 +1,69 @@
+{
+  "projectType": "general",
+  "projectName": "ED — Data Structures",
+  "projectDescription": "A University of Caldas Data Structures course repository containing workshops, teacher explanations, and homework implementations in Python (Jupyter Notebooks).",
+  "theme": "palm",
+  "primaryColor": "#7c3cec",
+  "lightColor": "#bc97f4",
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Course Overview",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": ["introduction", "setup"]
+          },
+          {
+            "group": "Recursion",
+            "pages": ["recursion/concepts", "recursion/stack-vs-tail"]
+          },
+          {
+            "group": "Trees",
+            "pages": ["trees/bst-overview", "trees/bst-operations", "trees/traversals"]
+          },
+          {
+            "group": "Graphs",
+            "pages": ["graphs/graph-overview", "graphs/adjacency-list", "graphs/graph-traversal"]
+          },
+          {
+            "group": "Workshops & Homeworks",
+            "pages": ["workshops/workshop-1", "homeworks/bst-search-remove"]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Binary Search Tree (BST) implementation with insert, search, delete, and traversals",
+    "Graph implementation using adjacency lists with weighted directed edges",
+    "Recursive algorithms: binary search, factorial (stack & tail), Fibonacci (memoized & tail)",
+    "Tree node deletion covering leaf, one-child, and two-children cases",
+    "Graph visualization using NetworkX and Matplotlib",
+    "Jupyter Notebook–based labs runnable in Google Colab"
+  ],
+  "publicApiSurface": [
+    "BST.insert(value)",
+    "BST.search(value)",
+    "BST.delete(value)",
+    "BST.inorder(node)",
+    "BST.pre_order()",
+    "BST.pos_order()",
+    "BST.print_tree(node, prefix, is_left)",
+    "BST.changeNodePosition(node_to_replace, new_subtree_root)",
+    "BST._getPredecessor(node)",
+    "Graph.add_vertex(id)",
+    "Graph.add_edge(from_id, to_id, weight)",
+    "Graph.get_vertex(id)",
+    "Graph.get_vertices()",
+    "Vertex.add_neighbor(neighbor, weight)",
+    "Vertex.get_connections()",
+    "binary_search(lista, value, left, right)",
+    "factorial_pila(n)",
+    "factorial_cola(n, array)",
+    "list_sum(index, array, sum)",
+    "fibonacci(n, suma, left, right)",
+    "fibonacci_2(n, values)"
+  ]
+}

@@ -1,0 +1,150 @@
+---
+title: "Recursion in Python: Concepts and Patterns"
+sidebarTitle: "Concepts"
+description: "Learn how recursion works in Python, including base cases, call stacks, and recursive patterns used in binary search, factorial, and Fibonacci algorithms."
+---
+
+Recursion is a fundamental technique in data structures and algorithms where a function solves a problem by calling itself on progressively smaller sub-problems. Rather than relying on explicit loops, a recursive function delegates work to a reduced version of itself, unwinding only once a **base case** is reached. Understanding recursion unlocks elegant solutions to problems like searching sorted sequences, computing combinatorial values, and traversing tree-based structures.
+
+## What is Recursion?
+
+Every recursive function has two essential components:
+
+<Steps>
+  <Step title="Base Case">
+    The condition that stops the recursion. Without it, the function would call itself forever and exhaust the call stack. The base case returns a concrete value immediately, without making another recursive call.
+  </Step>
+  <Step title="Recursive Case">
+    The branch where the function calls itself with a modified (usually smaller or simpler) argument, making steady progress toward the base case. Each recursive call is pushed onto the call stack and waits until the calls beneath it return.
+  </Step>
+</Steps>
+
+A simple mental model: the call stack behaves like a stack of plates. Each new recursive call adds a plate to the top. Once the base case is hit, plates are removed one by one from the top — **Last In, First Out (LIFO)** — as each waiting call receives its return value and completes.
+
+---
+
+## Binary Search (LIFO / Stack Recursion)
+
+Binary search is a classic example of **stack (LIFO) recursion**. Given a sorted list, it repeatedly halves the search space by comparing the target value against the middle element, recursing left or right until the element is found or the search space is exhausted.
+
+```python binary_search.py
+def binary_search(lista:list, value:int, left:int, right:int):
+  medio = (left + right) // 2
+
+  # Base Case
+
+  if medio > (len(lista) - 1) or right < left:
+    # Value not exists in list
+    return -1
+  elif lista[medio] == value:
+    # Found value
+    return medio
+
+  if value > lista[medio]:
+    # Carry out the recursion to right side
+    left = medio + 1
+  else:
+    # Carry out the recursion to left side
+    right = medio - 1
+
+  return binary_search(lista, value, left, right)
+```
+
+**How it works step by step:**
+
+<Steps>
+  <Step title="Compute the midpoint">
+    `medio = (left + right) // 2` finds the index of the middle element in the current search window.
+  </Step>
+  <Step title="Check base cases">
+    If `medio` is out of bounds (`medio > len(lista) - 1`) or the window has collapsed (`right < left`), the value does not exist — return `-1`. If `lista[medio] == value`, the element is found — return its index.
+  </Step>
+  <Step title="Narrow the search window">
+    If the target is greater than the middle element, move `left` to `medio + 1` (search the right half). Otherwise, move `right` to `medio - 1` (search the left half).
+  </Step>
+  <Step title="Recurse">
+    Call `binary_search` again with the updated `left` and `right` bounds. This call is pushed onto the stack and will eventually hit one of the base cases, after which each frame on the stack returns its result up the chain.
+  </Step>
+</Steps>
+
+**Usage example:**
+
+```python
+list_integer = [1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 13]
+index = binary_search(list_integer, 7, 0, len(list_integer))
+print(f"{index=}")  # index=6
+```
+
+<Note>
+  The list **must be sorted** before calling `binary_search`. In the workshop, `list_integer.sort()` is called on the raw input before passing it to the function. Passing an unsorted list produces undefined behaviour.
+</Note>
+
+Because each recursive call waits on the stack for the deeper call to return, this is **stack (LIFO) recursion**: the first call to return is the deepest one, and control unwinds back to the original caller last.
+
+---
+
+## Fibonacci with Memoization (Stack Recursion)
+
+The naive recursive Fibonacci recurrence — `fib(n) = fib(n-1) + fib(n-2)` — recomputes the same sub-problems exponentially many times, giving O(2ⁿ) time complexity. **Memoization** solves this by caching results in a dictionary the moment they are computed, so any subsequent request for the same value is answered in O(1) without a new recursive call.
+
+```python fibonacci_2.py
+def fibonacci_2(n:int, values:dict):
+	# Base Case
+	if n in [0, 1]:
+		return n
+
+	left, right = n-1, n-2
+
+	# Case n-1 values already!
+	if values.get(left):
+		left = values[left]
+	else:
+		values[left] = fibonacci_2(left, values)
+		left = values[left]
+
+	# Case n-2 values already!
+	if values.get(right):
+		left = values[right]
+	else:
+		values[right] = fibonacci_2(right, values)
+		right = values[right]
+
+	# Missing the n: x
+	return values[n-1] + values[n-2]
+```
+
+**Memoization explained:**
+
+- `values` is a shared dictionary pre-seeded with `{0: 0, 1: 1}` — the two base cases of the Fibonacci sequence.
+- Before recursing to compute `fib(n-1)`, the function checks `values.get(n-1)`. If the result is already cached, it is used directly; otherwise `fibonacci_2` is called recursively and the result is stored in `values`.
+- The same logic applies to `fib(n-2)`.
+- This reduces the time complexity from O(2ⁿ) to O(n) because each unique sub-problem is solved exactly once.
+
+**Usage example:**
+
+```python
+dict_values: dict = {0: 0, 1: 1}
+n: int = 15
+
+fibo: int = fibonacci_2(n, dict_values)
+
+print(dict_values)
+# {0: 0, 1: 1, 2: 1, 3: 2, 4: 3, 5: 5, 6: 8, 7: 13, 8: 21,
+#  9: 34, 10: 55, 11: 89, 12: 144, 13: 233, 14: 377}
+print(f"The Fibonacci Serie for {n} is: {fibo}")
+# The Fibonacci Serie for 15 is: 610
+```
+
+<Note>
+  Always pass a **fresh dictionary** pre-seeded with `{0: 0, 1: 1}` on each top-level call. Because Python mutable default arguments persist across calls, relying on a default `dict` parameter would cause the cache from a previous call to interfere with the next one.
+</Note>
+
+---
+
+## A Note on Stack Overflow
+
+<Warning>
+  Python's default recursion limit is **1 000 frames** (`sys.getrecursionlimit()`). Every pending recursive call occupies one frame on the call stack. Deeply recursive algorithms — especially naive (non-memoized) Fibonacci or binary search on very large lists — can raise a `RecursionError: maximum recursion depth exceeded` if this limit is hit.
+
+  You can raise the limit with `sys.setrecursionlimit(n)`, but a better long-term solution is to refactor deep recursion into an iterative loop, or switch to a tail-recursive accumulator pattern (see [Stack vs Tail Recursion](/recursion/stack-vs-tail)) that keeps the call depth constant.
+</Warning>
